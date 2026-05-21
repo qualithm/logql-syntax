@@ -72,6 +72,56 @@ jobs:
       - name: Test
         run: go test -race -count=1 -skip "$SKIP_TESTS" ./...
 
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - name: Run tests with coverage
+        run: go test -race -count=1 -coverprofile=coverage.out -covermode=atomic -skip "$SKIP_TESTS" ./...
+      - name: Enforce first-party coverage threshold
+        run: |
+          # Gate only on first-party (non-vendored, non-generated) packages.
+          # Vendored Loki code under syntax/, log/, internal/ is informational.
+          head -n1 coverage.out > coverage.firstparty.out
+          grep -E '^github.com/qualithm/logql-syntax/logqlmodel/' coverage.out \
+            | grep -v '\.y\.go:' >> coverage.firstparty.out || true
+          pct=$(go tool cover -func=coverage.firstparty.out | awk '/^total:/ {gsub("%","",$3); print $3}')
+          echo "First-party coverage (logqlmodel/): ${pct}%"
+          awk -v p="$pct" 'BEGIN { if (p+0 < 80.0) { print "first-party coverage below 80%"; exit 1 } }'
+      - name: Split coverage into upstream profile
+        run: |
+          head -n1 coverage.out > coverage.upstream.out
+          grep -E '^github.com/qualithm/logql-syntax/(syntax|log|internal)/' coverage.out \
+            | grep -v '\.y\.go:' >> coverage.upstream.out || true
+      - name: Upload first-party coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.firstparty.out
+          flags: firstparty
+          fail_ci_if_error: false
+      - name: Upload upstream coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.upstream.out
+          flags: upstream
+          fail_ci_if_error: false
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 14
+
   vuln:
     name: Vulnerability Scan
     runs-on: ubuntu-24.04
@@ -86,3 +136,31 @@ jobs:
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
       - name: Run govulncheck
         run: govulncheck ./...
+
+  sync-check:
+    name: Upstream Sync Drift
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - name: Resolve pinned Loki version
+        id: pin
+        run: |
+          ver=$(awk -F'"' '/^LOKI_VERSION="\$\{1:-/ {print $2}' scripts/sync-upstream.sh | sed 's/.*-//;s/}//')
+          echo "Pinned Loki version: $ver"
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+      - name: Prime module cache
+        run: go mod download github.com/grafana/loki/v3@${{ steps.pin.outputs.version }}
+      - name: Re-run sync script
+        run: bash scripts/sync-upstream.sh ${{ steps.pin.outputs.version }}
+      - name: Fail on drift
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::Vendored upstream files are out of sync with Loki ${{ steps.pin.outputs.version }}."
+            echo "Run 'scripts/sync-upstream.sh' locally and commit the result."
+            exit 1
+          fi

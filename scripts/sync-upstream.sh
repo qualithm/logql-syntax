@@ -7,6 +7,23 @@
 # Defaults to the version below. The script does not commit; review the diff
 # manually, since `pkg/util` and `pkg/logqlmodel` are trimmed reimplementations
 # that may need reconciliation against new upstream symbols.
+#
+# Paths overwritten by this script (do NOT add first-party code here):
+#   syntax/                          (copy_dir, full wipe + copy)
+#   log/                             (copy_dir)
+#   log/jsonexpr/                    (copy_dir)
+#   log/logfmt/                      (copy_dir)
+#   log/pattern/                     (copy_dir)
+#   internal/util/regex.go           (cp)
+#   internal/util/matchers.go        (cp)
+#   internal/util/encoding/encoding.go (cp)
+#   internal/constants/variants.go   (cp)
+#   LICENSE                          (cp)
+#
+# First-party paths (safe to edit; never overwritten):
+#   logqlmodel/                      (trimmed reimplementation, manual sync)
+#   *.go at repo root (doc.go, property_test.go, ...)
+#   .github/, codecov.yml, README.md, Makefile, NOTICE, scripts/
 
 set -euo pipefail
 
@@ -28,9 +45,15 @@ fi
 # Copy vendored directories verbatim.
 copy_dir() {
   local src="$1" dst="$2"
+  # Module cache files/dirs are mode 0555; ensure dst is writable before rm
+  # and after cp so subsequent operations can modify the tree.
+  if [[ -e "$dst" ]]; then
+    chmod -R u+w "$dst"
+  fi
   rm -rf "$dst"
   mkdir -p "$dst"
   cp -R "$src"/. "$dst"/
+  chmod -R u+w "$dst"
 }
 
 copy_dir "$loki/pkg/logql/syntax"        "syntax"
@@ -46,10 +69,18 @@ copy_dir "$loki/pkg/logql/log/pattern"   "log/pattern"
 
 # Re-copy the small trimmed util helpers (verbatim from upstream).
 mkdir -p internal/util internal/util/encoding internal/constants
-cp "$loki/pkg/util/regex.go"           internal/util/regex.go
-cp "$loki/pkg/util/matchers.go"        internal/util/matchers.go
-cp "$loki/pkg/util/encoding/encoding.go" internal/util/encoding/encoding.go
-cp "$loki/pkg/util/constants/variants.go" internal/constants/variants.go
+copy_file() {
+  local src="$1" dst="$2"
+  if [[ -e "$dst" ]]; then
+    chmod u+w "$dst"
+  fi
+  cp "$src" "$dst"
+  chmod u+w "$dst"
+}
+copy_file "$loki/pkg/util/regex.go"             internal/util/regex.go
+copy_file "$loki/pkg/util/matchers.go"          internal/util/matchers.go
+copy_file "$loki/pkg/util/encoding/encoding.go" internal/util/encoding/encoding.go
+copy_file "$loki/pkg/util/constants/variants.go" internal/constants/variants.go
 
 # Rewrite imports.
 rewrite() {
@@ -68,7 +99,7 @@ rewrite() {
 rewrite syntax log internal
 
 # Refresh LICENSE from upstream.
-cp "$loki/LICENSE" LICENSE
+copy_file "$loki/LICENSE" LICENSE
 
 # Tidy and report.
 go mod tidy
