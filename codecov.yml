@@ -1,0 +1,43 @@
+coverage:
+  status:
+    project:
+      # First-party code owned by this repo. Must stay >= 80%.
+      firstparty:
+        target: 80%
+        threshold: 1%
+        paths:
+          - "logqlmodel/"
+      # Vendored upstream Loki code: tracked for visibility but does not gate PRs.
+      upstream:
+        target: auto
+        informational: true
+        paths:
+          - "syntax/"
+          - "log/"
+          - "internal/"
+    patch:
+      default:
+        target: 80%
+        threshold: 1%
+
+flag_management:
+  default_rules:
+    carryforward: true
+  individual_flags:
+    - name: firstparty
+      paths:
+        - "logqlmodel/"
+    - name: upstream
+      paths:
+        - "syntax/"
+        - "log/"
+        - "internal/"
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false
+
+ignore:
+  # Generated parser sources — coverage on these is misleading.
+  - "**/*.y.go"

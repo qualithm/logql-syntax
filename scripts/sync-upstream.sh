@@ -7,6 +7,23 @@
 # Defaults to the version below. The script does not commit; review the diff
 # manually, since `pkg/util` and `pkg/logqlmodel` are trimmed reimplementations
 # that may need reconciliation against new upstream symbols.
+#
+# Paths overwritten by this script (do NOT add first-party code here):
+#   syntax/                          (copy_dir, full wipe + copy)
+#   log/                             (copy_dir)
+#   log/jsonexpr/                    (copy_dir)
+#   log/logfmt/                      (copy_dir)
+#   log/pattern/                     (copy_dir)
+#   internal/util/regex.go           (cp)
+#   internal/util/matchers.go        (cp)
+#   internal/util/encoding/encoding.go (cp)
+#   internal/constants/variants.go   (cp)
+#   LICENSE                          (cp)
+#
+# First-party paths (safe to edit; never overwritten):
+#   logqlmodel/                      (trimmed reimplementation, manual sync)
+#   *.go at repo root (doc.go, property_test.go, ...)
+#   .github/, codecov.yml, README.md, Makefile, NOTICE, scripts/
 
 set -euo pipefail
 
