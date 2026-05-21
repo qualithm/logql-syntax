@@ -1,0 +1,20 @@
+# NOTICE
+
+This module is a partial fork of the LogQL parser packages from Grafana Loki:
+
+- https://github.com/grafana/loki — `pkg/logql/syntax`, `pkg/logql/log`,
+  `pkg/logql/log/jsonexpr`, `pkg/logql/log/logfmt`, `pkg/logql/log/pattern`,
+  and trimmed extracts of `pkg/logqlmodel`, `pkg/util`, and
+  `pkg/util/constants`.
+
+The original Loki source is Copyright Grafana Labs and licensed under the
+Apache License, Version 2.0. See `LICENSE` for the full license text.
+
+This fork exists to provide a LogQL parser without inheriting Loki's
+runtime/distribution dependencies (`grafana/dskit`, `etcd`, `jaeger`, etc.).
+Files in `syntax/`, `log/`, and `log/*/` are copied near-verbatim from Loki,
+with import paths rewritten and unused transitive dependencies removed.
+`logqlmodel/` is a trimmed reimplementation of the Loki package by the same
+name; the `Result` and `Streams` types are intentionally omitted.
+
+Modifications by Qualithm to this fork are also released under Apache 2.0.
