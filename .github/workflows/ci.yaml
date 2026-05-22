@@ -2,13 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, test]
     paths-ignore:
       - "**/*.md"
       - "LICENSE"
       - "NOTICE"
   pull_request:
-    branches: [main]
+    branches: [main, test]
     paths-ignore:
       - "**/*.md"
       - "LICENSE"
@@ -91,7 +91,9 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
       - name: Run tests with coverage
-        run: go test -race -count=1 -coverprofile=coverage.out -covermode=atomic -skip "$SKIP_TESTS" ./...
+        run:
+          go test -race -count=1 -coverprofile=coverage.out -covermode=atomic -skip "$SKIP_TESTS"
+          ./...
       - name: Enforce first-party coverage threshold
         run: |
           # Gate only on first-party (non-vendored, non-generated) packages.
