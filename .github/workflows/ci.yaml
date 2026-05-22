@@ -1,8 +1,14 @@
 name: CI
 
 on:
+  push:
+    branches: [main, test]
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
+      - "NOTICE"
   pull_request:
-    branches: [main]
+    branches: [main, test]
     paths-ignore:
       - "**/*.md"
       - "LICENSE"
@@ -85,7 +91,9 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
       - name: Run tests with coverage
-        run: go test -race -count=1 -coverprofile=coverage.out -covermode=atomic -skip "$SKIP_TESTS" ./...
+        run:
+          go test -race -count=1 -coverprofile=coverage.out -covermode=atomic -skip "$SKIP_TESTS"
+          ./...
       - name: Enforce first-party coverage threshold
         run: |
           # Gate only on first-party (non-vendored, non-generated) packages.
@@ -102,6 +110,7 @@ jobs:
           grep -E '^github.com/qualithm/logql-syntax/(syntax|log|internal)/' coverage.out \
             | grep -v '\.y\.go:' >> coverage.upstream.out || true
       - name: Upload first-party coverage to Codecov
+        if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -109,6 +118,7 @@ jobs:
           flags: firstparty
           fail_ci_if_error: false
       - name: Upload upstream coverage to Codecov
+        if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
