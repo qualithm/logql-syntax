@@ -1,4 +1,4 @@
-# logql-syntax
+# LogQL Syntax
 
 [![CI](https://github.com/qualithm/logql-syntax/actions/workflows/ci.yaml/badge.svg)](https://github.com/qualithm/logql-syntax/actions/workflows/ci.yaml)
 [![codecov](https://codecov.io/gh/qualithm/logql-syntax/graph/badge.svg)](https://codecov.io/gh/qualithm/logql-syntax)
