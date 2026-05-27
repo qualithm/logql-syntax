@@ -65,12 +65,37 @@ To resync against a newer Loki release:
 
 - [Go](https://go.dev/dl/) 1.26+
 
+### Setup
+
+```bash
+make install-tools
+```
+
+This installs local development tooling, including `golangci-lint`, `goimports`, `govulncheck`, and
+`gosec`.
+
 ### Building & Testing
 
 ```bash
 make build
 make test
 make lint
+```
+
+### Security Tooling
+
+```bash
+make audit   # govulncheck
+make gosec   # standalone gosec scan
+```
+
+Daily CI security audit runs both tools in `.github/workflows/audit.yaml`.
+
+Install tools manually (if you are not using `make install-tools`):
+
+```bash
+go install golang.org/x/vuln/cmd/govulncheck@v1.3.0
+go install github.com/securego/gosec/v2/cmd/gosec@v2.26.1
 ```
 
 ### Resyncing from upstream Loki
