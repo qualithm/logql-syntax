@@ -71,8 +71,8 @@ To resync against a newer Loki release:
 make install-tools
 ```
 
-This installs local development tooling, including `golangci-lint`, `goimports`,
-`govulncheck`, and `gosec`.
+This installs local development tooling, including `golangci-lint`, `goimports`, `govulncheck`, and
+`gosec`.
 
 ### Building & Testing
 
