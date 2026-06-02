@@ -117,6 +117,6 @@ LOKI_VERSION=v3.8.0 make sync   # pin a specific upstream release
 
 Go 1.26+.
 
-## Licence
+## License
 
 Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for upstream attribution.
