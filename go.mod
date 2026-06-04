@@ -1,6 +1,6 @@
 module github.com/qualithm/logql-syntax
 
-go 1.26
+go 1.26.4
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
