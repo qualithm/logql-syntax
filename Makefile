@@ -1,5 +1,5 @@
 GOVULNCHECK_VERSION := v1.3.0
-GOSEC_VERSION := v2.26.1
+GOSEC_VERSION := v2.27.1
 GOSEC_ARGS ?= -exclude-dir=syntax -exclude-dir=log -exclude-dir=internal ./...
 
 .PHONY: build test test-race lint fmt audit gosec install-tools sync
@@ -19,7 +19,7 @@ fmt:
 
 lint:
 	go vet ./...
-	command -v golangci-lint >/dev/null && golangci-lint run --timeout=2m || echo "golangci-lint not installed; skipping"
+	command -v golangci-lint >/dev/null && golangci-lint run || echo "golangci-lint not installed; skipping"
 
 audit:
 	govulncheck ./...
