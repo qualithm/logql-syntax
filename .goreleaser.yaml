@@ -1,0 +1,44 @@
+version: 2
+
+project_name: logql-syntax
+
+before:
+  hooks:
+    - go mod tidy
+
+builds: []
+
+source:
+  enabled: true
+  name_template: "{{ .ProjectName }}_{{ .Version }}_source"
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: desc
+  use: github
+  format: "- {{ .Message }}"
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - Merge pull request
+      - Merge branch
+      - "^Merge .* into main"
+      - "^Merge .* into test"
+      - "^Merge .* into development"
+
+release:
+  github:
+    owner: qualithm
+    name: logql-syntax
+  draft: false
+  prerelease: auto
+  mode: replace
