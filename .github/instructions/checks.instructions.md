@@ -5,8 +5,8 @@ description: "Exact pre-commit commands for the go-vendored CI archetype, kept i
 
 # Pre-commit Checks
 
-This repo's `ci.yaml` is generated from `dx/ci-templates/go-vendored.yaml`. Run these before
-committing so CI passes on the first try:
+This repo's `ci.yaml` is generated from `dx/ci-templates/go-vendored.yaml` via `dx ci sync` (check
+for drift with `dx ci drift`). Run these before committing so CI passes on the first try:
 
 ```bash
 gofmt -s -l ./*.go logqlmodel/   # scoped: vendored packages keep upstream style, not enforced
