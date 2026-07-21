@@ -6,7 +6,11 @@ before:
   hooks:
     - go mod tidy
 
-builds: []
+# This module is a library (no main package); skip binary builds and ship a
+# source archive only. An empty `builds: []` is NOT sufficient in GoReleaser
+# v2 — it falls back to a default binary build and fails with "no main".
+builds:
+  - skip: true
 
 source:
   enabled: true
