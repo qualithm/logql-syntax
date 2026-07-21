@@ -18,7 +18,7 @@ permissions:
 
 env:
   GO_VERSION: "1.26.4"
-  # Two upstream Loki tests hardcode local-tz dates and drift; skip them.
+  # Upstream tests to skip (repo-specific; empty for repos with none).
   SKIP_TESTS: "Test_lineFormatter_Format/timestamp|Test_labelsFormatter_Format/timestamp"
 
 jobs:
@@ -59,7 +59,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
       - name: Format check
-        # Only enforce gofmt on files we own; vendored Loki holds upstream style.
+        # Only enforce gofmt on files we own; vendored upstream keeps its style.
         run: |
           out=$(gofmt -s -l ./*.go logqlmodel/)
           if [ -n "$out" ]; then
@@ -94,7 +94,13 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
           cache: true
-      - run: go test -race -count=1 -skip "$SKIP_TESTS" ./...
+      - name: Test
+        run: |
+          if [ -n "$SKIP_TESTS" ]; then
+            go test -race -count=1 -skip "$SKIP_TESTS" ./...
+          else
+            go test -race -count=1 ./...
+          fi
 
   coverage:
     name: Coverage
@@ -108,16 +114,23 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
       - name: Run tests with coverage
-        run:
-          go test -race -count=1 -coverprofile=coverage.out -covermode=atomic -skip "$SKIP_TESTS"
-          ./...
+        run: |
+          if [ -n "$SKIP_TESTS" ]; then
+            go test -race -count=1 -coverprofile=coverage.out -covermode=atomic -skip "$SKIP_TESTS" ./...
+          else
+            go test -race -count=1 -coverprofile=coverage.out -covermode=atomic ./...
+          fi
       - name: Enforce first-party coverage threshold
         run: |
           head -n1 coverage.out > coverage.firstparty.out
+          if [ "^github.com/qualithm/logql-syntax/logqlmodel/" = "NONE" ]; then
+            echo "no first-party code in this repo; skipping first-party coverage gate"
+            exit 0
+          fi
           grep -E '^github.com/qualithm/logql-syntax/logqlmodel/' coverage.out \
             | grep -v '\.y\.go:' >> coverage.firstparty.out || true
           pct=$(go tool cover -func=coverage.firstparty.out | awk '/^total:/ {gsub("%","",$3); print $3}')
-          echo "First-party coverage (logqlmodel/): ${pct}%"
+          echo "First-party coverage: ${pct}%"
           awk -v p="$pct" 'BEGIN { if (p+0 < 80.0) { print "first-party coverage below 80%"; exit 1 } }'
       - name: Split coverage into upstream profile
         run: |
