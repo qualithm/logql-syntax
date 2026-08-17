@@ -3,7 +3,6 @@
 [![CI](https://github.com/qualithm/logql-syntax/actions/workflows/ci.yaml/badge.svg)](https://github.com/qualithm/logql-syntax/actions/workflows/ci.yaml)
 [![codecov](https://codecov.io/gh/qualithm/logql-syntax/graph/badge.svg)](https://codecov.io/gh/qualithm/logql-syntax)
 [![Go Reference](https://pkg.go.dev/badge/github.com/qualithm/logql-syntax.svg)](https://pkg.go.dev/github.com/qualithm/logql-syntax)
-[![Go Report Card](https://goreportcard.com/badge/github.com/qualithm/logql-syntax)](https://goreportcard.com/report/github.com/qualithm/logql-syntax)
 
 Standalone Go parser and AST for [Grafana Loki](https://github.com/grafana/loki)'s LogQL. Lifts the
 upstream `syntax`, `log`, and `logqlmodel` packages out of `grafana/loki` with their runtime
