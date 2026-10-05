@@ -23,7 +23,7 @@
 # First-party paths (safe to edit; never overwritten):
 #   logqlmodel/                      (trimmed reimplementation, manual sync)
 #   *.go at repo root (doc.go, property_test.go, ...)
-#   .github/, codecov.yml, README.md, Makefile, NOTICE, scripts/
+#   .github/, codecov.yaml, README.md, Makefile, NOTICE, scripts/
 
 set -euo pipefail
 
