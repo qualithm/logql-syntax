@@ -8,9 +8,8 @@ This repo's `ci.yaml` is generated from `dx/ci-templates/go-vendored.yaml` via `
 for drift with `dx ci drift`). Run these before committing so CI passes on the first try:
 
 ```bash
-# Scoped to first-party files; vendored packages keep upstream style.
-gofmt -s -l ./*.go logqlmodel/
-go mod tidy   # commit any resulting go.mod/go.sum diff
+test -z "$(gofmt -s -l ./*.go logqlmodel/ | tee /dev/stderr)"   # first-party files only; vendored packages keep upstream style
+go mod tidy -diff                                               # fails on go.mod/go.sum drift; run `go mod tidy` to fix
 go vet ./...
 go build ./...
 go test -race -count=1 ./...
