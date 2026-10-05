@@ -31,15 +31,16 @@ expr.Walk(func(e syntax.Expr) bool {
 
 ## What's included
 
-| Path             | Source                                                              |
-| ---------------- | ------------------------------------------------------------------- |
-| `syntax/`        | `github.com/grafana/loki/v3/pkg/logql/syntax`                       |
-| `log/`           | `github.com/grafana/loki/v3/pkg/logql/log`                          |
-| `log/jsonexpr/`  | `github.com/grafana/loki/v3/pkg/logql/log/jsonexpr`                 |
-| `log/logfmt/`    | `github.com/grafana/loki/v3/pkg/logql/log/logfmt`                   |
-| `log/pattern/`   | `github.com/grafana/loki/v3/pkg/logql/log/pattern`                  |
-| `logqlmodel/`    | trimmed extract of `pkg/logqlmodel` (errors + label constants only) |
-| `internal/util/` | three regex / matcher helpers from `pkg/util`                       |
+| Path                  | Source                                                              |
+| --------------------- | ------------------------------------------------------------------- |
+| `syntax/`             | `github.com/grafana/loki/v3/pkg/logql/syntax`                       |
+| `log/`                | `github.com/grafana/loki/v3/pkg/logql/log`                          |
+| `log/jsonexpr/`       | `github.com/grafana/loki/v3/pkg/logql/log/jsonexpr`                 |
+| `log/logfmt/`         | `github.com/grafana/loki/v3/pkg/logql/log/logfmt`                   |
+| `log/pattern/`        | `github.com/grafana/loki/v3/pkg/logql/log/pattern`                  |
+| `logqlmodel/`         | trimmed extract of `pkg/logqlmodel` (errors + label constants only) |
+| `internal/util/`      | regex, matcher and encoding helpers from `pkg/util`                 |
+| `internal/constants/` | `variants.go` from `pkg/util/constants`                             |
 
 The runtime `Result` and `Streams` types from `logqlmodel` are intentionally omitted because they
 pull in `loki/pkg/push` and queryrange machinery.
@@ -50,12 +51,17 @@ Tracked against Loki [`v3.7.2`](https://github.com/grafana/loki/releases/tag/v3.
 
 To resync against a newer Loki release:
 
-1. Copy source files from `pkg/logql/{syntax,log}/...` into the matching directories here.
-2. Rewrite `github.com/grafana/loki/v3/pkg/...` import paths to
-   `github.com/qualithm/logql-syntax/...` (see the `sed` invocation in the project history).
-3. Reconcile any new uses of `pkg/util`, `pkg/logqlmodel`, or `pkg/util/constants` — extend the
-   trimmed packages here as needed.
-4. `go test ./...` — the only known persistent failures are the two timestamp subtests in `log/`
+1. Download the release and run the sync script, which copies the upstream packages and rewrites
+   their import paths. `make sync` uses the version pinned in `scripts/sync-upstream.sh`.
+
+   ```bash
+   go mod download github.com/grafana/loki/v3@<loki-version>
+   ./scripts/sync-upstream.sh <loki-version>
+   ```
+
+2. Reconcile any new uses of `pkg/logqlmodel` — extend the trimmed `logqlmodel/` package here as
+   needed.
+3. `go test ./...` — the only known persistent failures are the two timestamp subtests in `log/`
    that hardcode local-timezone dates upstream.
 
 ## Development
@@ -70,16 +76,13 @@ To resync against a newer Loki release:
 make install-tools
 ```
 
-This installs local development tooling, including `golangci-lint`, `goimports`, and `govulncheck`.
+This installs `golangci-lint`, `goimports`, `govulncheck` and `gosec` into `$GOPATH/bin` (`~/go/bin`
+by default). Put that directory on your `PATH`:
 
-> **Note:** Tools are installed to `$GOPATH/bin` (typically `~/go/bin`). Make sure that directory is
-> on your `$PATH`, otherwise the installed binaries won't be found. Add this to your shell config if
-> needed:
->
-> ```bash
-> echo 'export PATH="$HOME/go/bin:$PATH"' >> ~/.zshrc
-> source ~/.zshrc
-> ```
+```bash
+echo 'export PATH="$HOME/go/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
 
 ### Building & Testing
 
@@ -96,21 +99,7 @@ make audit   # govulncheck
 make gosec   # standalone gosec scan
 ```
 
-Daily CI security audit runs both tools in `.github/workflows/audit.yaml`.
-
-Install tools manually (if you are not using `make install-tools`):
-
-```bash
-go install golang.org/x/vuln/cmd/govulncheck@v1.3.0
-go install github.com/securego/gosec/v2/cmd/gosec@v2.26.1
-```
-
-### Resyncing from upstream Loki
-
-```bash
-make sync                       # defaults to LOKI_VERSION in the Makefile
-LOKI_VERSION=v3.8.0 make sync   # pin a specific upstream release
-```
+`.github/workflows/audit.yaml` runs `govulncheck` and `gosec` daily.
 
 ## Minimum Supported Go Version
 
